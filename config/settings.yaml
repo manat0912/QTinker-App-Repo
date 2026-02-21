@@ -1,0 +1,27 @@
+agent_llm:
+  api_key: ''
+  endpoint_url: http://192.168.1.134:1234
+  provider: LM Studio (Local)
+distillation:
+  alpha: 0.5
+  batch_size: 4
+  enabled: true
+  epochs: 1
+  learning_rate: 5e-5
+  max_steps: 100
+  mode: placeholder
+  teacher_arch: Masked LM (BERT, RoBERTa)
+  teacher_model_path: C:\pinokio\api\QTinker\app\bert_models\bert_large\bert-large-uncased-wwm
+  teacher_type: Diffusers (Image/Video/Audio Generation)
+  temperature: 1.0
+local_llm:
+  api_key: ''
+  base_url: gemma-teacher-v213 http://192.168.1.134:1234
+  enabled: true
+  model_name: ''
+  ollama_url: http://localhost:11434
+  provider: lm_studio
+ui:
+  allow_raw_pt: true
+  theme: soft
+  title: Distill & Quantize App

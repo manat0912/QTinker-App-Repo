@@ -1,0 +1,12 @@
+# Models
+*.safetensors
+*.bin
+
+# Python junk
+__pycache__/
+*.py[cod]
+*$py.class
+
+# OS junk
+.DS_Store
+Thumbs.db
