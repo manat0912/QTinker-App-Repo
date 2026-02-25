@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 
 import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer, AutoConfig
+from transformers import AutoConfig, AutoModelForMaskedLM, AutoModelForCausalLM, AutoModel, AutoTokenizer
 from torchao.quantization import quantize_
 
 from configs.torchao_configs import get_quantization_config
@@ -333,31 +333,80 @@ def load_model(model_path: str, model_type: str, log_fn=None, device_manager=Non
                 log_fn(f"Loading HuggingFace/Transformers model...")
             
             device_map = "auto" if use_gpu else "cpu"
+            dtype = torch.float16 if use_gpu else torch.float32
             
             try:
-                from transformers import AutoModel
+                config = AutoConfig.from_pretrained(model_path)
+                
+                is_masked_lm = False
+                # Wir prüfen sowohl den Pfadnamen als auch die Architektur in der Config
+                path_lower = model_path.lower()
+                
+                if hasattr(config, "architectures") and config.architectures:
+                    # Hier nutzen wir arch_name jetzt wirklich!
+                    arch_name = str(config.architectures[0]).lower()
+                    is_masked_lm = any(x in arch_name for x in ["bert", "roberta", "albert"])
+                
+                # Sicherheitsnetz: Falls es nicht im Arch-Namen steht, aber im Pfad oder model_type
+                if not is_masked_lm:
+                    is_masked_lm = any(x in path_lower for x in ["bert", "roberta", "tinybert"])
+                
+                if not is_masked_lm and hasattr(config, "model_type"):
+                    is_masked_lm = config.model_type.lower() in ["bert", "roberta", "tinybert"]
+
+                if is_masked_lm:
+                    if log_fn:
+                        log_fn(f"✨ Specialized Architecture detected: MaskedLM. Loading with Head.")
+                    model = AutoModelForMaskedLM.from_pretrained(
+                        model_path,
+                        torch_dtype=dtype,
+                        low_cpu_mem_usage=True,
+                        device_map=device_map
+                    )
+                else:
+                    if log_fn:
+                        log_fn("Loading as CausalLM (Generative)...")
+                    model = AutoModelForCausalLM.from_pretrained(
+                        model_path,
+                        torch_dtype=dtype,
+                        low_cpu_mem_usage=True,
+                        device_map=device_map
+                    )
+            except Exception as e:
+                if log_fn:
+                    log_fn(f"Specialized load failed ({e}), falling back to generic AutoModel.")
+                # Der ultimative Fallback (deine ursprüngliche Methode)
                 model = AutoModel.from_pretrained(
                     model_path,
-                    torch_dtype=torch.float16 if use_gpu else torch.float32,
-                    low_cpu_mem_usage=True,
-                    device_map=device_map
-                )
-            except Exception:
-                # Fallback to AutoModelForCausalLM
-                model = AutoModelForCausalLM.from_pretrained(
-                    model_path,
-                    torch_dtype=torch.float16 if use_gpu else torch.float32,
+                    torch_dtype=dtype,
                     low_cpu_mem_usage=True,
                     device_map=device_map
                 )
             
             try:
-                tokenizer = AutoTokenizer.from_pretrained(model_path)
-            except Exception:
-                tokenizer = None
+                # Versuche den Tokenizer zu laden (lädt bei HF-ID automatisch aus dem Netz)
+                tokenizer = AutoTokenizer.from_pretrained(
+                    model_path, 
+                    local_files_only=os.path.exists(model_path) # Nur lokal suchen, wenn Pfad existiert
+                )
+            except Exception as e:
+                if log_fn:
+                    log_fn(f"⚠️ Tokenizer load failed: {e}")
+                
+                # Wenn es ein BERT-Modell ist, erzwinge den Standard-BERT Tokenizer
+                if is_masked_lm or "bert" in model_path.lower():
+                    if log_fn:
+                        log_fn("🔄 Attempting to fetch standard 'bert-base-uncased' tokenizer as replacement...")
+                    try:
+                        tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
+                    except:
+                        tokenizer = None
             
+            if tokenizer is None:
+                raise ValueError("Could not initialize tokenizer. Check internet connection or model files.")
+
             if log_fn:
-                log_fn(f"Model loaded with device_map='{device_map}'")
+                log_fn(f"Tokenizer successfully loaded. Vocabulary size: {len(tokenizer) if tokenizer else 'N/A'}")
             
             return model, tokenizer
         
