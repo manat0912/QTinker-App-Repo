@@ -8,11 +8,12 @@ Supports:
 """
 
 import os
+import sys
 import json
 from pathlib import Path
 from typing import List, Dict, Optional, Tuple
 from dataclasses import dataclass
-import sys
+import gradio as gr
 
 sys.path.insert(0, str(Path(__file__).parent))
 from universal_model_loader import PinokioPathDetector
@@ -406,7 +407,7 @@ class ModelPathSelector:
     def get_bert_models_path() -> Path:
         """Get the bert_models directory path."""
         pinokio_root = PinokioPathDetector.find_pinokio_root()
-        bert_models = pinokio_root / "api" / "QTinker" / "app" / "bert_models"
+        bert_models = pinokio_root / "api" / "QTinker.git" / "app" / "bert_models"
         return bert_models
     
     @staticmethod
@@ -472,7 +473,6 @@ class ModelPathSelector:
 
 def create_file_browser_ui():
     """Create a Gradio UI for the file browser with folder and file selection."""
-    import gradio as gr
     
     # Initialize browser. It will default to the Pinokio API path.
     browser = EnhancedFileBrowser(root_path=None)
