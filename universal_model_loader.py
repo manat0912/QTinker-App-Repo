@@ -30,27 +30,33 @@ class PinokioPathDetector:
     @staticmethod
     def find_pinokio_root() -> Optional[Path]:
         """Find Pinokio root directory automatically."""
-        # Check if PINOKIO_ROOT environment variable is set
+        try:
+            current_path = Path(__file__).resolve()
+            for parent in [current_path] + list(current_path.parents):
+                if (parent / "api").exists() and (parent / "api" / "QTinker.git").exists():
+                    return parent
+                if "api" in parent.parts and (parent.parent / "api").exists():
+                    idx = parent.parts.index("api")
+                    return Path(*parent.parts[:idx])
+        except Exception:
+            pass
+
         pinokio_root = os.getenv("PINOKIO_ROOT")
         if pinokio_root and os.path.isdir(pinokio_root):
             return Path(pinokio_root)
         
-        # Check common Pinokio installation locations
         common_paths = [
             Path.home() / "pinokio",
             Path("C:/pinokio") if sys.platform == "win32" else Path("/pinokio"),
             Path("D:/pinokio") if sys.platform == "win32" else None,
-            Path("E:/pinokio") if sys.platform == "win32" else None,
-            # Check relative to current script
-            Path(__file__).parent.parent.parent,
+            Path("G:/pinokio") if sys.platform == "win32" else None, # G: hinzugefügt
         ]
         
         for path in common_paths:
             if path and path.exists() and (path / "api").exists():
                 return path
-        
-        # If not found, assume default structure
-        return Path(__file__).parent.parent.parent
+                
+        return None
     
     @staticmethod
     def resolve_path(path_str: str) -> Path:
@@ -541,7 +547,7 @@ if __name__ == "__main__":
     
     # Test path resolution
     test_paths = [
-        "$PINOKIO_ROOT/api/QTinker/app/bert_models",
+        "$PINOKIO_ROOT/api/QTinker.git/app/bert_models",
         "$PINOKIO_API",
         "$PROJECT_ROOT",
     ]

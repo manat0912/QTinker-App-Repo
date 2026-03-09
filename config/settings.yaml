@@ -6,13 +6,13 @@ distillation:
   alpha: 0.5
   batch_size: 4
   enabled: true
-  epochs: 1
+  epochs: 50
   learning_rate: 5e-5
   max_steps: 100
-  mode: placeholder
+  mode: teacher_student
   teacher_arch: Masked LM (BERT, RoBERTa)
-  teacher_model_path: C:\pinokio\api\QTinker\app\bert_models\bert_large\bert-large-uncased-wwm
-  teacher_type: Diffusers (Image/Video/Audio Generation)
+  teacher_model_path: "bert_models/bert_large/bert-large-uncased-wwm"
+  teacher_type: HuggingFace Transformers (NLP/Vision/Audio)
   temperature: 1.0
 local_llm:
   api_key: ''

@@ -1,7 +1,5 @@
 # Corrected requirements.txt for QTinker App
 # Core transformers and models
-transformers>=4.48.0
-huggingface-hub>=0.25.0
 accelerate>=1.3.0
 diffusers>=0.32.0
 safetensors>=0.5.0
@@ -9,12 +7,9 @@ safetensors>=0.5.0
 # Quantization and optimization
 gguf>=0.17.0
 bitsandbytes>=0.45.0
-optimum[onnx,exporters]>=1.21.0
-executorch
 
 # Advanced Quantization (Post-training & QAT)
 auto-gptq>=0.7.1
-autoawq>=0.2.8
 neural-speed==1.0  # Final stable release; project archived
 
 # Pruning and Sparsity
@@ -42,13 +37,12 @@ openvino>=2024.6.0
 
 # UI and visualization
 gradio>=4.0.0
-gradio-client
 pyyaml>=6.0.1
 requests>=2.32.0
 
 # Framework support
-tensorflow-cpu>=2.18.0; sys_platform != 'darwin' or platform_machine != 'arm64'
-tensorflow>=2.18.0; sys_platform == 'darwin' and platform_machine == 'arm64'
+tensorflow>=2.18.0
+tensorrt==10.9.0.34
 jax>=0.5.0
 jaxlib>=0.5.0
 
@@ -59,7 +53,7 @@ librosa>=0.10.2
 scipy>=1.15.0
 
 # ONNX support (optional, for model export)
-onnx>=1.17.0
+onnx
 onnxruntime>=1.20.0
 
 # Quantization tools
